@@ -35,8 +35,7 @@ def load_model(path: Path):
 
 def print_section(title: str) -> None:
     """In tiêu đề section cho dễ đọc log."""
-    print(f"
-{'=' * 20} {title} {'=' * 20}")
+    print(f"{'=' * 20} {title} {'=' * 20}")
 
 
 # TODO: thêm các hàm tiện ích như logging, timer, export metrics nếu cần
