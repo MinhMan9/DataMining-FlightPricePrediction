@@ -51,7 +51,11 @@ def handle_missing_values(df: pd.DataFrame) -> pd.DataFrame:
     """Xử lý missing values và loại bỏ các cột không cần thiết."""
     cleaned = df.copy()
     validate_required_columns(cleaned)
+
+    # Với cột Total_Stops, nếu có giá trị thiếu, ta sẽ loại bỏ dòng đó vì đây là thông tin quan trọng để dự đoán giá vé.
     cleaned = cleaned.dropna(subset=["Total_Stops"])
+
+    # Loại bỏ các cột không cần thiết nếu tồn tại
     cleaned = cleaned.drop(columns=["Route", "Additional_Info"], errors="ignore")
 
     return cleaned
@@ -60,9 +64,16 @@ def handle_missing_values(df: pd.DataFrame) -> pd.DataFrame:
 
 def basic_cleaning_pipeline(df: pd.DataFrame) -> pd.DataFrame:
     """Pipeline làm sạch cơ bản."""
+    # Chuẩn hoá tên cột
     cleaned = standardize_column_names(df)
+
+    # Loại bỏ dòng trùng lặp
     cleaned = remove_duplicates(cleaned)
+
+    # Chuẩn hóa dữ liệu text
     cleaned = normalize_text_columns(cleaned)
+
+    # Xử lý missing values và loại bỏ cột không cần thiết
     cleaned = handle_missing_values(cleaned)
     return cleaned
 
@@ -77,6 +88,7 @@ def run_preprocessing(path=RAW_FILE) -> pd.DataFrame:
     """Đọc dữ liệu thô, chạy cleaning pipeline và lưu dữ liệu sạch."""
     raw_df = pd.read_excel(path)
     clean_df = basic_cleaning_pipeline(raw_df)
+
     save_clean_data(clean_df)
     return clean_df
 

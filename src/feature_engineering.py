@@ -3,6 +3,7 @@ from __future__ import annotations
 import re
 from pathlib import Path
 
+import category_encoders as ce
 import numpy as np
 import pandas as pd
 from sklearn.model_selection import train_test_split
@@ -29,11 +30,16 @@ def load_clean_data(path=CLEAN_FILE) -> pd.DataFrame:
 
 
 def extract_journey_features(df: pd.DataFrame) -> pd.DataFrame:
-    """Tách ngày và tháng từ Date_of_Journey."""
+    """Tách ngày, tháng và thứ từ Date_of_Journey."""
     fe = df.copy()
     journey_dt = pd.to_datetime(fe["Date_of_Journey"], format="%d/%m/%Y", errors="coerce")
+    
     fe["journey_day"] = journey_dt.dt.day
     fe["journey_month"] = journey_dt.dt.month
+    
+    # Thêm thuộc tính thứ trong tuần (0 = Thứ Hai, 6 = Chủ Nhật)
+    fe["day_of_week"] = journey_dt.dt.dayofweek 
+    
     return fe
 
 
@@ -48,9 +54,7 @@ def extract_time_features(df: pd.DataFrame) -> pd.DataFrame:
     arr_dt = pd.to_datetime(arrival_hhmm, format="%H:%M", errors="coerce")
 
     fe["dep_hour"] = dep_dt.dt.hour
-    fe["dep_minute"] = dep_dt.dt.minute
     fe["arrival_hour"] = arr_dt.dt.hour
-    fe["arrival_minute"] = arr_dt.dt.minute
     return fe
 
 
@@ -94,34 +98,33 @@ def map_total_stops(df: pd.DataFrame) -> pd.DataFrame:
     return fe
 
 
-def one_hot_encode_categorical(df: pd.DataFrame, columns: list[str]) -> pd.DataFrame:
+def binary_encode_categorical(df: pd.DataFrame, columns: list[str]) -> pd.DataFrame:
+    """Binary Encoding cho các cột categorical bằng category_encoders."""
     fe = df.copy()
     cols = [col for col in columns if col in fe.columns]
     if cols:
-        fe = pd.get_dummies(fe, columns=cols, drop_first=False, dtype=int)
+        encoder = ce.BinaryEncoder(cols=cols, return_df=True)
+        fe = encoder.fit_transform(fe)
     return fe
 
-
-def add_route_features(df: pd.DataFrame) -> pd.DataFrame:
-    """Tạo thêm đặc trưng từ Route để tăng tín hiệu cho model."""
-    fe = df.copy()
-    if "Route" not in fe.columns:
-        return fe
-
-    route_series = fe["Route"].astype("string")
-    fe["route_num_legs"] = route_series.str.count("→") + 1
-    fe["route_num_legs"] = fe["route_num_legs"].fillna(0)
-    return fe
 
 
 def build_feature_dataframe(df: pd.DataFrame) -> pd.DataFrame:
     """Chạy toàn bộ feature engineering."""
+    # Lấy thứ, ngày, tháng từ Date_of_Journey
     fe = extract_journey_features(df)
+
+    # Tách giờ từ Dep_Time và Arrival_Time
     fe = extract_time_features(fe)
+
+    # Chuyển Duration thành số phút
     fe = extract_duration_features(fe)
+
+    # Map Total_Stops sang số lượng dừng
     fe = map_total_stops(fe)
-    fe = add_route_features(fe)
-    fe = one_hot_encode_categorical(fe, columns=["Airline", "Source", "Destination"])
+
+    # Binary encode các cột Airline, Source, Destination
+    fe = binary_encode_categorical(fe, columns=["Airline", "Source", "Destination"])
     return fe
 
 
@@ -227,7 +230,7 @@ def split_and_save_train_test(
 
 
 def run_step2_pipeline() -> dict[str, pd.DataFrame | Path]:
-    """Chạy trọn bước 2: feature, model-ready, split train/test."""
+    """Chạy bước 2: feature, model-ready, split train/test."""
     clean_df = load_clean_data()
     feature_df = build_feature_dataframe(clean_df)
     save_feature_data(feature_df)
