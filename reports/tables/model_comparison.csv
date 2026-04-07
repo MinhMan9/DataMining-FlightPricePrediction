@@ -1,4 +1,4 @@
-Model,MAE,RMSE,R2
-Random Forest,1063.45,1526.98,0.8328
-Decision Tree,1076.84,1739.16,0.7831
-Linear Regression,1804.9,2302.48,0.6198
+model,MAE,RMSE,R2
+random_forest,1063.45,1526.98,0.8328
+decision_tree,1076.84,1739.16,0.7831
+linear_regression,1804.9,2302.48,0.6198

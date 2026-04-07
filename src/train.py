@@ -5,6 +5,7 @@ from pathlib import Path
 import pandas as pd
 from sklearn.ensemble import RandomForestRegressor
 from sklearn.linear_model import LinearRegression
+from sklearn.tree import DecisionTreeRegressor
 from sklearn.metrics import mean_absolute_error, mean_squared_error, r2_score
 from sklearn.model_selection import cross_validate
 from sklearn.pipeline import Pipeline
@@ -36,12 +37,21 @@ def load_train_test_split() -> dict:
     }
 
 
-def build_models() -> dict:
+def build_baseline_models() -> dict:
     """Khai báo các baseline model."""
     return {
         "linear_regression": LinearRegression(),
+        "decision_tree": DecisionTreeRegressor(
+            random_state=RANDOM_STATE,
+        ),
+    }
+
+
+def build_improved_models() -> dict:
+    """Khai báo các improved model."""
+    return {
         "random_forest": RandomForestRegressor(
-            n_estimators=200,
+            n_estimators=100,
             random_state=RANDOM_STATE,
             n_jobs=-1,
         ),
@@ -58,13 +68,12 @@ def evaluate_regression(y_true, y_pred) -> dict:
     }
 
 
-def train_baseline_models() -> pd.DataFrame:
-    """Train các baseline models trên dữ liệu đã tách sẵn và trả về bảng kết quả."""
+def _train_models(models: dict, save_dir: Path) -> pd.DataFrame:
+    """Train các models, lưu file và trả về bảng kết quả."""
     data = load_train_test_split()
     X_train, X_test = data["X_train"], data["X_test"]
     y_train, y_test = data["y_train"], data["y_test"]
 
-    models = build_models()
     results = []
 
     for model_name, model in models.items():
@@ -77,9 +86,19 @@ def train_baseline_models() -> pd.DataFrame:
         metrics = evaluate_regression(y_test, preds)
         metrics["model"] = model_name
         results.append(metrics)
-        save_model(pipe, MODELS_DIR / "baseline" / f"{model_name}.joblib")
+        save_model(pipe, save_dir / f"{model_name}.joblib")
 
     return pd.DataFrame(results)[["model", "MAE", "RMSE", "R2"]].sort_values("RMSE")
+
+
+def train_baseline_models() -> pd.DataFrame:
+    """Train các baseline models (Linear Regression + Decision Tree)."""
+    return _train_models(build_baseline_models(), MODELS_DIR / "baseline")
+
+
+def train_improved_models() -> pd.DataFrame:
+    """Train các improved models (Random Forest)."""
+    return _train_models(build_improved_models(), MODELS_DIR / "improved")
 
 
 def run_cross_validation(X, y, model_name: str, model, cv: int = 5) -> dict:
