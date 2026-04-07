@@ -1,159 +1,151 @@
 # Flight Price Prediction - Data Mining Project
 
 ## Giới thiệu
-Dự án này thực hiện bài toán dự đoán giá vé máy bay bằng các kỹ thuật Data Mining và Machine Learning.
+
+Dự án dự đoán giá vé máy bay sử dụng các kỹ thuật Data Mining và Machine Learning.  
+Pipeline bao gồm: tiền xử lý dữ liệu → tạo đặc trưng → huấn luyện mô hình baseline → cải tiến mô hình → đánh giá và trực quan hóa.
 
 ## Dataset
-- File dữ liệu: `Data_Train.xlsx`
-- Số dòng: 10,683
-- Số cột: 11
-- Biến mục tiêu: `Price`
+
+- **File dữ liệu:** `data/raw/Data_Train.xlsx`
+- **Số dòng:** 10,683
+- **Số cột:** 11
+- **Biến mục tiêu:** `Price` (giá vé máy bay, đơn vị INR)
 
 ## Mục tiêu
+
 - Phân tích các yếu tố ảnh hưởng đến giá vé máy bay
-- Xây dựng nhiều mô hình hồi quy để dự đoán giá vé
-- So sánh và lựa chọn mô hình tốt nhất
+- Xây dựng mô hình baseline (Linear Regression, Decision Tree)
+- Cải tiến bằng mô hình ensemble (Random Forest)
+- So sánh và đánh giá mô hình tốt nhất
 
+## Kết quả
 
-## Cài đặt môi trường
+| Model             | MAE      | RMSE     | R²     |
+|-------------------|----------|----------|--------|
+| Random Forest     | 1,063.45 | 1,526.98 | 0.8328 |
+| Decision Tree     | 1,076.84 | 1,739.16 | 0.7831 |
+| Linear Regression | 1,804.90 | 2,302.48 | 0.6198 |
 
-- Bước 1: Tạo môi trường conda
+**Mô hình tốt nhất:** Random Forest (R² = 0.8328)
+
+---
+
+## Cài đặt và chạy dự án
+
+### Yêu cầu
+
+- Python 3.11+
+- Conda (khuyến nghị) hoặc pip
+
+### Bước 1: Clone dự án
+
+```bash
+git clone <repository-url>
+cd DataMining-FlightPricePrediction
+```
+
+### Bước 2: Tạo môi trường và cài thư viện
 
 ```bash
 conda create -n flightprice python=3.11 -y
-```
-
-- Bước 2: Kích hoạt môi trường
-
-```bash
 conda activate flightprice
-```
-
-- Bước 3: Cài đặt thư viện
-
-```bash
 pip install -r requirements.txt
 ```
 
-- Bước 4: Mở Jupyter Notebook
+### Bước 3: Đặt file dữ liệu
+
+Đặt file `Data_Train.xlsx` vào thư mục `data/raw/`.
+
+### Bước 4: Chạy toàn bộ pipeline
+
+```bash
+python main.py
+```
+
+Pipeline sẽ tự động thực hiện:
+1. **Preprocessing** — Làm sạch dữ liệu, xử lý missing values, duplicate
+2. **Feature Engineering** — Tạo đặc trưng từ thời gian, thời lượng bay, số điểm dừng, one-hot encoding, tách train/test
+3. **Baseline Models** — Train Linear Regression + Decision Tree
+4. **Improved Models** — Train Random Forest
+5. **Export** — Lưu bảng so sánh mô hình vào `reports/tables/model_comparison.csv`
+
+### Chạy từng bước qua Notebook
+
+Nếu muốn xem chi tiết từng bước, mở Jupyter Notebook:
 
 ```bash
 jupyter notebook
 ```
 
-## Thao tác trên Jupyter Notebook
+Chạy lần lượt các notebook trong thư mục `notebooks/`:
 
-- Bước 1: Kích hoạt môi trường
+| Thứ tự | Notebook                               | Mô tả                                                            |
+|--------|----------------------------------------|-------------------------------------------------------------------|
+| 1      | `01_data_understanding.ipynb`          | Khám phá dữ liệu, phân phối giá, phân tích theo hãng/điểm dừng  |
+| 2      | `02_data_cleaning_feature_engineering.ipynb` | Làm sạch, tạo features, one-hot encoding, tách train/test   |
+| 3      | `03_baseline_models.ipynb`             | Train baseline: Linear Regression & Decision Tree                 |
+| 3b     | `03b_improved_models.ipynb`            | Train improved: Random Forest (ensemble từ Decision Tree)         |
+| 4      | `04_final_evaluation_visualization.ipynb` | Đánh giá cuối, biểu đồ Actual vs Predicted, Residuals, Feature Importance |
 
-```bash
-conda activate flightprice
-```
+---
 
-- Bước 2: Mở Jupyter Notebook
-
-```bash
-jupyter notebook
-```
-
-## Cấu trúc thư mục dự án
+## Cấu trúc thư mục
 
 ```text
 DataMining-FlightPricePrediction/
 │
+├── main.py                          # Chạy toàn bộ pipeline
+├── requirements.txt                 # Thư viện cần cài
+├── README.md
+│
 ├── data/
 │   ├── raw/
-│   │   └── Data_Train.xlsx
-│   ├── processed/
-│   │   ├── train_clean.csv
-│   │   ├── train_fe.csv
-│   │   ├── X_train.csv
-│   │   ├── X_test.csv
-│   │   ├── y_train.csv
-│   │   └── y_test.csv
-│   └── external/
+│   │   └── Data_Train.xlsx          # Dữ liệu gốc
+│   └── processed/                   # Dữ liệu sau xử lý (tự sinh khi chạy)
+│       ├── train_clean.csv
+│       ├── train_features.csv
+│       ├── train_model_ready.csv
+│       ├── X_train.csv
+│       ├── X_test.csv
+│       ├── y_train.csv
+│       └── y_test.csv
 │
 ├── notebooks/
-│   ├── 01_data_understanding_eda.ipynb
+│   ├── 01_data_understanding.ipynb
 │   ├── 02_data_cleaning_feature_engineering.ipynb
 │   ├── 03_baseline_models.ipynb
-│   ├── 04_advanced_models_tuning.ipynb
-│   └── 05_final_evaluation_visualization.ipynb
+│   ├── 03b_improved_models.ipynb
+│   └── 04_final_evaluation_visualization.ipynb
 │
 ├── src/
 │   ├── __init__.py
-│   ├── config.py
-│   ├── utils.py
-│   ├── data_preprocessing.py
-│   ├── feature_engineering.py
-│   ├── train.py
-│   └── evaluate.py
+│   ├── config.py                    # Đường dẫn, hằng số cấu hình
+│   ├── utils.py                     # Hàm tiện ích (save/load model, ensure_dir)
+│   ├── data_preprocessing.py        # Làm sạch dữ liệu
+│   ├── feature_engineering.py       # Tạo đặc trưng
+│   ├── train.py                     # Huấn luyện mô hình
+│   └── evaluate.py                  # Đánh giá và trực quan hóa
 │
 ├── models/
-│   ├── baseline/
-│   ├── tuned/
-│   └── final_model.joblib
+│   ├── baseline/                    # Linear Regression, Decision Tree
+│   └── improved/                    # Random Forest
 │
-├── reports/
-│   ├── figures/
-│   ├── tables/
-│   ├── slides/
-│   └── final_report.pdf
-│
-├── requirements.txt
-├── README.md
-├── .gitignore
-└── main.py
+└── reports/
+    ├── figures/                     # Biểu đồ (tự sinh khi chạy notebook 04)
+    └── tables/
+        └── model_comparison.csv     # Bảng so sánh kết quả
 ```
 
-### Mô tả các thư mục và tệp chính
+---
 
-data/
-```
-Thư mục chứa toàn bộ dữ liệu của dự án.
-	•	data/raw/: chứa dữ liệu gốc, chưa qua xử lý.
-	•	data/processed/: chứa dữ liệu sau khi làm sạch, tạo đặc trưng và tách train/test.
-	•	data/external/: dùng để lưu dữ liệu bổ sung từ bên ngoài nếu nhóm mở rộng dự án sau này.
-```
+## Mô tả các module trong `src/`
 
-notebooks/
-```
-Chứa các file Jupyter Notebook phục vụ cho quá trình phân tích và thực nghiệm theo từng giai đoạn.
-	•	01_data_understanding_eda.ipynb: đọc dữ liệu, khám phá dữ liệu, kiểm tra missing values, duplicate, trực quan hóa ban đầu.
-	•	02_data_cleaning_feature_engineering.ipynb: làm sạch dữ liệu và tạo các đặc trưng mới từ thời gian, thời lượng bay, số điểm dừng.
-	•	03_baseline_models.ipynb: huấn luyện và so sánh các mô hình cơ bản.
-	•	04_advanced_models_tuning.ipynb: thử các mô hình nâng cao và tinh chỉnh siêu tham số.
-	•	05_final_evaluation_visualization.ipynb: đánh giá mô hình cuối cùng và trực quan hóa kết quả.
-```
-
-src/
-```
-Chứa mã nguồn Python chính của dự án, được tổ chức thành các module để tái sử dụng.
-	•	config.py: khai báo đường dẫn dữ liệu, tên biến mục tiêu, các cấu hình chung.
-	•	utils.py: các hàm tiện ích như đọc/lưu dữ liệu, in thông tin cơ bản, hỗ trợ xử lý file.
-	•	data_preprocessing.py: các hàm làm sạch dữ liệu, xử lý missing values, duplicate, chuẩn hóa định dạng cột.
-	•	feature_engineering.py: các hàm tạo đặc trưng mới từ Date_of_Journey, Dep_Time, Arrival_Time, Duration, Total_Stops, …
-	•	train.py: chứa logic huấn luyện mô hình.
-	•	evaluate.py: chứa các hàm đánh giá mô hình bằng các chỉ số như MAE, RMSE, R², MAPE.
-```
-
-models/
-```
-Thư mục lưu các mô hình đã huấn luyện.
-	•	models/baseline/: lưu các mô hình cơ bản.
-	•	models/tuned/: lưu các mô hình sau khi tuning.
-	•	final_model.joblib: mô hình cuối cùng được chọn để sử dụng và báo cáo kết quả.
-```
-
-reports/
-```
-Chứa các sản phẩm phục vụ báo cáo và thuyết trình.
-	•	reports/figures/: lưu hình ảnh biểu đồ dùng trong báo cáo và slide.
-	•	reports/tables/: lưu các bảng kết quả, bảng so sánh mô hình.
-	•	reports/slides/: lưu file slide thuyết trình.
-	•	final_report.pdf: báo cáo hoàn chỉnh của nhóm.
-```
-
-main.py
-```
-Tệp chạy chính của dự án, có thể dùng để gọi pipeline tổng quát khi cần.
-```
+| Module                  | Chức năng                                                                 |
+|-------------------------|---------------------------------------------------------------------------|
+| `config.py`             | Khai báo đường dẫn dữ liệu, tên biến mục tiêu, các tham số cấu hình     |
+| `utils.py`              | Hàm tiện ích: save/load model, tạo thư mục, save DataFrame               |
+| `data_preprocessing.py` | Làm sạch dữ liệu, xử lý missing values, duplicate, chuẩn hóa định dạng  |
+| `feature_engineering.py`| Tạo đặc trưng từ Date_of_Journey, Duration, Total_Stops, one-hot encoding|
+| `train.py`              | Huấn luyện baseline (LR + DT) và improved (RF), lưu model                |
+| `evaluate.py`           | Tính metrics (MAE, RMSE, R²), vẽ biểu đồ, export kết quả                |
