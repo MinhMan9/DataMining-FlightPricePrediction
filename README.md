@@ -41,7 +41,7 @@ Pipeline bao gồm: tiền xử lý dữ liệu → tạo đặc trưng → hu�
 ### Bước 1: Clone dự án
 
 ```bash
-git clone <repository-url>
+git clone https://github.com/MinhMan9/DataMining-FlightPricePrediction.git
 cd DataMining-FlightPricePrediction
 ```
 
